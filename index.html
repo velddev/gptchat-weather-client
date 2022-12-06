@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Weather API Client</title>
+    <style>
+      body {
+        font-family: sans-serif;
+      }
+      h1 {
+        text-align: center;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 30px 0;
+      }
+      label {
+        margin-bottom: 10px;
+      }
+      select,
+      button {
+        padding: 10px;
+        font-size: 16px;
+      }
+      #chart-container {
+        width: 600px;
+        height: 400px;
+        margin: 30px auto;
+      }
+    </style>
+    <!-- Load the Charts.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+  </head>
+  <body>
+    <h1>Weather Forecast</h1>
+    <form>
+      <label for="city">City:</label>
+      <select id="city" name="city">
+        <option value="">-- Select a city --</option>
+        <option value="52.52,13.41">Berlin</option>
+        <option value="40.7128,-74.0060">New York</option>
+        <option value="51.5074,-0.1278">London</option>
+        <option value="41.9028,12.4964">Rome</option>
+        <option value="35.6895,139.6917">Tokyo</option>
+      </select>
+      <button type="button" onclick="getWeather()">Get Weather</button>
+    </form>
+    <canvas id="chart-container" width="600" height="400"></canvas>
+    <script>
+      // Global variable to store the weather data
+      var weatherData = null;
+
+      function getWeather() {
+          // Get the latitude and longitude from the selected city
+          var city = document.getElementById("city").value;
+          var latitude = city.split(",")[0];
+          var longitude = city.split(",")[1];
+
+          // Make an HTTP request to the open-meteo.com API
+          var xhr = new XMLHttpRequest();
+          xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              // Parse the JSON response
+              var response = JSON.parse(this.responseText);
+
+              // Store the weather data
+              weatherData = response.hourly.temperature_2m;
+
+              // Create the chart
+              var ctx = document.getElementById("chart-container").getContext("2d");
+              var chart = new Chart(ctx, {
+                   type: "line",
+                    data: {
+                      labels: response.hourly.time,
+                      datasets: [
+                        {
+                          label: "Temperature (°C)",
+                          data: weatherData,
+                          fill: false,
+                          borderColor: "#ff7f00",
+                          pointRadius: 0,
+                          pointHoverRadius: 5,
+                          pointHoverBackgroundColor: "#ff7f00"
+                        }
+                      ]
+                    }
+                });
+              }
+          };
+          xhr.open("GET", "https://api.open-meteo.com/v1/forecast?latitude=" + latitude + "&longitude=" + longitude + "&current_weather=true&hourly=temperature_2m,relativehumidity_2m,windspeed_10m", true);
+          xhr.send();
+      }
+    </script>
+  </body>
+</html>
